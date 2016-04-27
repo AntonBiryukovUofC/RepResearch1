@@ -1,1 +1,2 @@
-# Course Assignment 1 for Reproducible Research
+# Short report on the effect of major weather disasters on the economic and population health condition in the US
+
