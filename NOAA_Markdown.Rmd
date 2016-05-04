@@ -8,21 +8,27 @@ author: "Anton Biryukov, U of Calgary"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Summary of the analysis
+## Summary of the analysis (synopsis)
 
-In this brief report I have quantitatively analyzed the property and crop damage caused by the storm weather events, as well as the impact on the population health in the United States. The analyzed data covers the period from 1950 -- 2011, and includes records on major weather events, classified by the event type, with information on the property and crop damage, as well as fatalities/injuries delivered. The preliminary analysis of the documented event types has shown that ~900 types in the raw data can be categorized in 7 following common types. Subsequently, the data was aggregated according to the weather event type. For each event type, I computed the total economy damage ( property + crop), as well as count of injuries and fatalities, and segregated that over the states 
+In this brief report I have quantitatively analyzed the property and crop damage caused by the storm weather events, as well as the impact on the population health in the United States. The analyzed data covers the period from 1950 -- 2011, and includes records on major weather events, classified by the event type, with information on the property and crop damage, as well as fatalities/injuries delivered. The preliminary analysis of the documented event types has shown that ~900 types in the raw data can be categorized in 7 following common types. Subsequently, the data was aggregated according to the weather event type. For each event type, I computed the total economy damage ( property + crop), as well as count of injuries and fatalities, and segregated that over the states. The results demonstrate the fact that tornadoes tend to produce the largest impact on the population health as measured by the count of fatalities and injuries across all the states. On the other hand, the greatest economic consequences are somewhat equally caused by heavy-wind related disasters, tornadoes and hails. The results also show that the consequences of floods are considerable, whereas the economic footprint of winter seasonal events is relatively small.
 
+## Introduction
 
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern. This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+The dataset offered for the analysis in this study is relatively dirty, and needs some preprocessing prior to being able to assist in answering the research questions. Specifically, the research questions are:
+1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+2. Across the United States, which types of events have the greatest economic consequences?
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+These two questions imply the event types to be clearly outlined in the dataset, although that is not true. Therefore, below I explain the processing done to categorize the events into several types.
 
-```{r cars}
-summary(cars)
+## Data Processing
+```{r}
+
 ```
 
-## Including Plots
+
+## Results
 
 You can also embed plots, for example:
 
@@ -30,4 +36,3 @@ You can also embed plots, for example:
 plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
