@@ -23,9 +23,101 @@ The dataset offered for the analysis in this study is relatively dirty, and need
 These two questions imply the event types to be clearly outlined in the dataset, although that is not true. Therefore, below I explain the processing done to categorize the events into several types.
 
 ## Data Processing
+### Libraries Preloading
+I start off by loading the necessary libraries for the analysis, as well as downloading the data itself
 ```{r}
+# Load the necessary libraries:
+library("dplyr")
+library("lubridate")
+library("ggplot2")
+library("R.utils")
+# This function downloads data if necessary:
+source("./downloadData.R")
+downloadData()
+```
+### Reading the data
+Now, when data is downloaded, I check whether it is already in the memory. if not - I read the csv with the data, otherwise I proceed further towards analysis. As data is really ``heavy'', it totally makes sense to have this check in the script.
+```{r, cache=TRUE}
+if (!exists("stormData") )
+{
+    # Unzip the data
+    if (!file.exists("./Data/Storm_dataset.csv")){
+        message("unzipping the data")
+        bunzip2("./Data/StormData.csv.bz2", "./Data/Storm_dataset.csv", remove = FALSE, skip = TRUE)
+        message("Done unzipping!")
+        
+    }
+    message("Forming a subset of data")
+    if (work_on_subset){
+        stormData <- tbl_df(read.csv("./Data/Storm_dataset.csv",nrows = n_row))
+    }
+    else{
+        stormData <- tbl_df(read.csv("./Data/Storm_dataset.csv"))
+    }
+}
+```
+### Correcting the factors for property dmg
+According to the documentation, the property and the crop damage field are followed by the exponential multiplier (K,M,B), indicating thousands , millions and billions of dollars, respectively. Therefore, this function kmb_to_exp will take care of the conversion from k,m,b to 1E3, 1E6, 1E9.
+
+```{r}
+# Establish the mapping from K and M to 10^3 and 10^6
+exp_val <- c(1E3,1E6,1E9)
+names(exp_val) <- c("K","M","B")  # All numbers are then in $$$
+kmb_to_exp <- function(x,exp_val){
+    
+    if (toupper(x) %in% names(exp_val)) y <- as.numeric(exp_val[toupper(x)])
+    else y <- NA
+}    
 
 ```
+
+Now I add the columns that would transform letters to the numeric values, as well as filter out NAs:
+
+```{r, cache = TRUE}
+storm_Data_PROP <- stormData %>%
+    mutate(PROPDMGEXP_ADJ = sapply(PROPDMGEXP,kmb_to_exp,exp_val)) %>%
+    mutate(CROPDMGEXP_ADJ = sapply(CROPDMGEXP,kmb_to_exp,exp_val) ) %>%
+    filter(!is.na(PROPDMG) & !is.na(PROPDMGEXP_ADJ))
+
+```
+### Categorizing the EVTYPE column
+The reason to categorize the column is that it has A LOT of unique values:
+```{r}
+length(unique(stormData$EVTYPE))
+```
+Here I show top-20 most frequent types and their share in the total:
+```{r}
+typesStats <- sort(table(stormData$EVTYPE),decreasing = TRUE)
+head(typesStats,20)
+percentageTop <- sum(typesStats[1:20])/sum(typesStats)
+print(percentageTop)
+```
+Seems like this is >95% of data, therefore I can ground my segregation based on the top 20 types. It seems that I could potentially divide the 20 into 6-7, e.g. with the following keywords. These keywords would then serve as a event type identifier and a regular expression. Therefore, I go over the records, and try to find one of the 7 words in its EVTYPE string, and then assign it the type according to the keyword it includes:
+```{r, cache = TRUE}
+keywords =c("HAIL","WIND","TORNADO|FUNNEL","FLOOD|FLD","LIGHTNING","SNOW|WINTER|ICE","RAIN|WATER")
+strings <- storm_Data_PROP$EVTYPE
+table_greps <- sapply(keywords, grepl, strings, ignore.case=TRUE)
+message("Looking for the keywords in the EVTYPE")
+evtypes_df <- arrange(tbl_df(as.data.frame(which(table_greps==TRUE,arr.ind = TRUE ))),row) %>% mutate(EVtype = keywords[col])
+Evtypes <- array(rep(NA,length(strings)))
+Evtypes[as.array(evtypes_df$row)] = evtypes_df$EVtype # Assign subsetted event type according to the row number
+```
+Now I am ready to analyze the relative impact of the aforementioned types:
+
+```{r,cache = TRUE}
+storm_Data_Table <- storm_Data_PROP %>%
+    mutate(Total_Dmg_Corrected = sum(c(PROPDMG*PROPDMGEXP_ADJ,CROPDMG*CROPDMGEXP_ADJ),na.rm=TRUE)) %>% # Apply the exp correction and sum the impact
+    mutate(eventType = Evtypes) %>% # Aggregate the types of the events into 7 subtypes
+    filter(!is.na(eventType)) %>%
+    filter(STATE %in% state.abb) %>% # Make sure the abbreviations have the states as listed in state.abb
+    group_by(STATE,eventType) %>% # Group by the event type and the state
+    summarize(total_dmg = sum(Total_Dmg_Corrected)) # Sum the damage per event type
+```
+
+
+
+
+
 
 
 ## Results
